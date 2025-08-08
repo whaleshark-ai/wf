@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Workforce Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <nav class="bg-white shadow-lg border-b">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-semibold text-gray-800">Workforce Portal</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="dashboard.html" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100">Dashboard</a>
+                    <a href="task.html" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100">Task</a>
+                    <a href="staff.html" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100">Staff</a>
+                    <a href="schedule.html" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100">Schedule</a>
+                    <a href="locate.html" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100">Locate</a>
+                    <a href="documents.html" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100">Documents</a>
+                    <a href="reports.html" class="nav-item px-3 py-2 rounded-md text-sm font-medium bg-gray-100 text-gray-900">Reports</a>
+                    <a href="message-center.html" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100">Message Center</a>
+                    <a href="settings.html" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100">Settings</a>
+                    <div class="flex items-center">
+                        <a href="login.html" class="text-sm text-red-600 hover:text-red-800">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Reports</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <!-- Side Menu -->
+            <aside class="md:col-span-1">
+                <nav class="bg-white border rounded-lg shadow divide-y divide-gray-100">
+                    <button class="report-nav w-full text-left px-4 py-3 hover:bg-gray-50 font-medium" data-report="task-summary">Task Summary Report</button>
+                    <button class="report-nav w-full text-left px-4 py-3 hover:bg-gray-50 font-medium" data-report="patrol-summary">Patrol Summary Report</button>
+                    <button class="report-nav w-full text-left px-4 py-3 hover:bg-gray-50 font-medium" data-report="daily-activity">Daily Activity Report</button>
+                    <button class="report-nav w-full text-left px-4 py-3 hover:bg-gray-50 font-medium" data-report="task-activity">Task Activity Report</button>
+                </nav>
+            </aside>
+
+            <!-- Report Form -->
+            <section class="md:col-span-3">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 id="reportTitle" class="text-xl font-semibold text-gray-800 mb-4">Task Summary Report</h3>
+                    <form id="reportForm" class="space-y-5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Contract Number</label>
+                                <input id="contractNumber" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600" disabled>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Task Status</label>
+                                <select id="statusSelect" multiple class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-28">
+                                    <option value="open-queued">Open-Queued</option>
+                                    <option value="assigned">Assigned</option>
+                                    <option value="in-progress">In-Progress</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="cancelled">Cancelled</option>
+                                    <option value="suspended">Suspended</option>
+                                    <option value="overdue">Overdue</option>
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                                <input id="startDate" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                                <input id="endDate" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Search Staff (same contract)</label>
+                            <div class="flex gap-2">
+                                <input id="staffSearch" type="text" placeholder="Type to filter..." class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <select id="staffSelect" class="w-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">All Staff</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button id="exportBtn" type="button" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Export CSV</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </div>
+    <script src="js/reports.js"></script>
+</body>
+</html>
+

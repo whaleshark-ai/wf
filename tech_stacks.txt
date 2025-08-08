@@ -1,0 +1,2 @@
+tools allowed: 
+html, tailwindcss, jquery, chartjs

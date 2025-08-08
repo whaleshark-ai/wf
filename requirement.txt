@@ -1,0 +1,57 @@
+Build a worforce portal for poc purpose. This is purely be a frontend only. All the crud actions will save or edit with json files.
+
+Navigation bar: at the top of the page with menu items, dashboard (landing page), task, staff & schedule, locate, settings
+
+1. logon page: will have a select role dropdown with system admin, manager, staff.
+
+From this line on, each page will have a basic hide show logic from a user roles setting page record. Assume all roles can view all pages
+2. dashboard: each role will have their own data dashboard
+system admin: daily usage, total number of tasks by day, week or month view, a summary table with stats on the change vs 7 days and 28 days ago
+manager: 
+staff: 
+
+3. task: this will be a summary page with navigation bar, top section having the number of total tasks, card style buttons showing the distribution of tasks by status. 
+The section beneath this will be a collection view. Each card item will have the task category name, status label, tag (for late accept or task overdue situation), location, start time - end time
+At the top right bottom of this section there will be a add cta which display a menu view with 3 items: add a new task, add a new task from template
+
+add a new task: this is a form which includes a left section (form), right section with staff list
+    left section:
+        2 tabs (reserved, adhoc)
+        task category dropdown field  task subcategory drop down field
+        task name auto filled when task subcategory is selected
+        start time 
+        duration (min)
+        end time auto calculate by start time + duration
+        location search dropdown field
+
+    right section:
+        filter input field that filters the name of the staff
+        checkboxes of staffs
+
+    under both sections a bar section with save template button and submit button
+
+add a new task from template: this will first let user selects from a list of template defined and show the same form with filled in values
+
+
+4. staff & schedule: leave it a blank page with navigation bar
+5. locate: leave it a blank page with navigation bar
+
+6. Settings: 
+This page will have all the necessary forms to build the foundation of the portal. Each role will have their own access rule to the items.
+Expect each list item will have a table view and a cta to add the needed data
+
+
+System admin will have all the access and only these are visible to them:
+Add staff (manager, staff) - name, contract, status, user role
+user role - user role name, job nature (drop down: admin, manager, frontline), status
+acess control - admin can check the checkboxes to control show hide logic of the pages mentioned above including setting page
+
+Manager will have access to these items and items from staff
+contract - contract number, start time, end time, status, service type, is licensee
+service - service type name, status
+Add staff - name, contract, status, pre-filled user role (Staff and cannot modify)
+
+Staff:
+Add task template: task type, task category, task subcategory, 
+task category: category name, contract (prefiiled and cannot modify), parent category id, status
+location: location name, x-coordinate, y-coordinate, building, level, status
