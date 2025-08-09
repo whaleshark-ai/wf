@@ -40,126 +40,66 @@
             <h2 class="text-2xl font-bold text-gray-800">Settings</h2>
         </div>
         
-        <!-- System Admin Settings -->
-        <div id="adminSettings" class="hidden">
+        <!-- System Settings Section -->
+        <div id="systemSettingsSection" class="mb-8">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">System Settings</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Admin-specific items -->
                 <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Add Staff</h3>
-                    <p class="text-gray-600 mb-4">Manage staff members</p>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Staff</button>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">User Roles</h3>
-                    <p class="text-gray-600 mb-4">Manage user roles and permissions</p>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">User Roles</h4>
+                    <p class="text-gray-600 mb-4">Manage user roles and job nature</p>
                     <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Roles</button>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Access Control</h3>
-                    <p class="text-gray-600 mb-4">Control page visibility</p>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Access Control</h4>
+                    <p class="text-gray-600 mb-4">Control menu visibility by role</p>
                     <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Access</button>
                 </div>
-                
-                <!-- Manager items (also accessible to admin) -->
+            </div>
+        </div>
+
+        <!-- Contract Management Section -->
+        <div id="contractManagementSection" class="mb-8">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">Contract Management</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Contracts</h3>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Contracts</h4>
                     <p class="text-gray-600 mb-4">Manage contracts</p>
                     <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Contracts</button>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Services</h3>
-                    <p class="text-gray-600 mb-4">Manage service types</p>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Services</button>
-                </div>
-                
-                <!-- Staff items (also accessible to admin) -->
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Task Templates</h3>
-                    <p class="text-gray-600 mb-4">Manage task templates</p>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Templates</button>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Task Categories</h3>
-                    <p class="text-gray-600 mb-4">Manage task categories</p>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Categories</button>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Locations</h3>
-                    <p class="text-gray-600 mb-4">Manage locations</p>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Locations</button>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Checkpoints</h3>
-                    <p class="text-gray-600 mb-4">Manage checkpoints (groups of POIs)</p>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Checkpoints</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Manager Settings -->
-        <div id="managerSettings" class="hidden">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Manager-specific items -->
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Contracts</h3>
-                    <p class="text-gray-600 mb-4">Manage contracts</p>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Contracts</button>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Services</h3>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Services</h4>
                     <p class="text-gray-600 mb-4">Manage service types</p>
                     <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Services</button>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Add Staff</h3>
-                    <p class="text-gray-600 mb-4">Add new staff members</p>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Add Staff</button>
-                </div>
-                
-                <!-- Staff items (also accessible to manager) -->
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Task Templates</h3>
-                    <p class="text-gray-600 mb-4">Manage task templates</p>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Templates</button>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Task Categories</h3>
-                    <p class="text-gray-600 mb-4">Manage task categories</p>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Categories</button>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Locations</h3>
-                    <p class="text-gray-600 mb-4">Manage locations</p>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Locations</button>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Checkpoints</h3>
-                    <p class="text-gray-600 mb-4">Manage checkpoints (groups of POIs)</p>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Checkpoints</button>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Staff</h4>
+                    <p class="text-gray-600 mb-4">Manage staff members</p>
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Staff</button>
                 </div>
             </div>
         </div>
 
-        <!-- Staff Settings -->
-        <div id="staffSettings" class="hidden">
+        <!-- Task Management Section -->
+        <div id="taskManagementSection" class="mb-8">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">Task Management</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Task Templates</h3>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Task Templates</h4>
                     <p class="text-gray-600 mb-4">Manage task templates</p>
                     <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Templates</button>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Task Categories</h3>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Task Categories</h4>
                     <p class="text-gray-600 mb-4">Manage task categories</p>
                     <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Categories</button>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Locations</h3>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Locations</h4>
                     <p class="text-gray-600 mb-4">Manage locations</p>
                     <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Locations</button>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Checkpoints</h3>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Checkpoints</h4>
                     <p class="text-gray-600 mb-4">Manage checkpoints (groups of POIs)</p>
                     <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Checkpoints</button>
                 </div>

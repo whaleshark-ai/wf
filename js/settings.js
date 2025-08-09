@@ -24,25 +24,13 @@ class SettingsPage {
 
     loadSettingsPage() {
         const role = this.currentUser.role;
-        
-        // Hide all settings sections
-        $('#adminSettings, #managerSettings, #staffSettings').hide();
-        
-        // Show appropriate settings
-        switch(role) {
-            case 'system_admin':
-                $('#adminSettings').show();
-                break;
-            case 'manager':
-                $('#managerSettings').show();
-                break;
-            case 'manager_licensee':
-                $('#managerSettings').show();
-                break;
-            case 'staff':
-                $('#staffSettings').show();
-                break;
-        }
+        const canViewSystem = role === 'system_admin';
+        const canViewContract = role === 'system_admin' || role === 'manager' || role === 'manager_licensee';
+        const canViewTask = true;
+
+        $('#systemSettingsSection').toggle(canViewSystem);
+        $('#contractManagementSection').toggle(canViewContract);
+        $('#taskManagementSection').toggle(canViewTask);
     }
 
     bindEvents() {
