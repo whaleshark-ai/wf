@@ -58,11 +58,11 @@ class TaskPage {
 
     loadData() {
         this.tasks = JSON.parse(localStorage.getItem('tasks')) || this.getSampleTasks();
-        this.staff = JSON.parse(localStorage.getItem('staff')) || this.getSampleStaff();
-        this.locations = JSON.parse(localStorage.getItem('locations')) || this.getSampleLocations();
-        this.taskCategories = JSON.parse(localStorage.getItem('taskCategories')) || this.getSampleTaskCategories();
+        this.staff = (JSON.parse(localStorage.getItem('staff')) || this.getSampleStaff()).filter(s => (s.status || 'active') === 'active');
+        this.locations = (JSON.parse(localStorage.getItem('locations')) || this.getSampleLocations()).filter(l => (l.status || 'active') === 'active');
+        this.taskCategories = (JSON.parse(localStorage.getItem('taskCategories')) || this.getSampleTaskCategories()).filter(c => (c.status || 'active') === 'active');
         this.taskSubcategories = JSON.parse(localStorage.getItem('taskSubcategories')) || this.getSampleTaskSubcategories();
-        this.documents = JSON.parse(localStorage.getItem('documents')) || [];
+        this.documents = (JSON.parse(localStorage.getItem('documents')) || []).filter(d => (d.status || 'active') === 'active');
     }
 
     bindEvents() {

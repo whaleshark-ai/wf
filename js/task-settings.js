@@ -176,7 +176,7 @@ class TaskSettingsPage {
 
     applySearch() {
         const q = ($('#searchInput').val() || '').toLowerCase();
-        this.filteredItems = this.items.filter(item => (item.name || item.filename || '').toLowerCase().includes(q));
+        this.filteredItems = this.items.filter(item => (item.status || 'active') === 'active').filter(item => (item.name || item.filename || '').toLowerCase().includes(q));
         this.renderTable();
         this.updatePagination();
     }

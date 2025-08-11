@@ -58,7 +58,7 @@ class ContractsManagementPage {
     }
 
     loadContractsData() {
-        this.contracts = JSON.parse(localStorage.getItem('contracts')) || [];
+        this.contracts = (JSON.parse(localStorage.getItem('contracts')) || []).filter(c => (c.status || 'active') === 'active');
         
         // Add sample data if empty
         if (this.contracts.length === 0) {

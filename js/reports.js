@@ -56,7 +56,7 @@ class ReportsPage {
 
     loadData() {
         // Determine contract number: use current user's contract if present, else default to first staff contract
-        this.staff = JSON.parse(localStorage.getItem('staff')) || [];
+        this.staff = (JSON.parse(localStorage.getItem('staff')) || []).filter(s => (s.status || 'active') === 'active');
         const userContract = this.currentUser?.contract;
         let contract = userContract || (this.staff[0]?.contract) || 'CON001';
         this.contractNumber = contract;

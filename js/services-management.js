@@ -58,7 +58,7 @@ class ServicesManagementPage {
     }
 
     loadServicesData() {
-        this.services = JSON.parse(localStorage.getItem('services')) || [];
+        this.services = (JSON.parse(localStorage.getItem('services')) || []).filter(s => (s.status || 'active') === 'active');
         
         // Add sample data if empty
         if (this.services.length === 0) {

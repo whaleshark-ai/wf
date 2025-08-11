@@ -58,7 +58,7 @@ class LocationsManagementPage {
     }
 
     loadLocationsData() {
-        this.locations = JSON.parse(localStorage.getItem('locations')) || [];
+        this.locations = (JSON.parse(localStorage.getItem('locations')) || []).filter(l => (l.status || 'active') === 'active');
         
         // Add sample data if empty
         if (this.locations.length === 0) {

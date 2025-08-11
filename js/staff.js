@@ -64,7 +64,7 @@ class StaffPage {
             this.staff = this.generateSampleStaff();
             localStorage.setItem('staff', JSON.stringify(this.staff));
         } else {
-            this.staff = existing;
+            this.staff = existing.filter(s => (s.status || 'active') === 'active');
         }
         this.filteredStaff = [...this.staff];
     }
