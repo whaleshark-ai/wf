@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Settings - Workforce Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-lg border-b">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-semibold text-gray-800">Workforce Portal</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="dashboard.html" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100">Dashboard</a>
+                    <a href="task.html" class="nav-item px-3 py-2 rounded-md text-sm font-medium bg-gray-100 text-gray-900">Task</a>
+                    <a href="staff.html" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100">Staff</a>
+                    <a href="schedule.html" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100">Schedule</a>
+                    <a href="locate.html" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100">Locate</a>
+                    <a href="documents.html" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100">Documents</a>
+                    <a href="reports.html" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100">Reports</a>
+                    <a href="message-center.html" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100">Message Center</a>
+                    <a href="settings.html" class="nav-item px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100">Settings</a>
+                    <div class="flex items-center">
+                        <a href="login.html" class="text-sm text-red-600 hover:text-red-800">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-4 gap-6">
+        <!-- Side Menu -->
+        <div class="md:col-span-1 bg-white p-6 rounded-lg shadow">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Task Settings</h3>
+            <ul class="space-y-2" id="taskSettingsMenu">
+                <li><a href="#" class="task-settings-item block px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100 active" data-section="templates">Task Templates</a></li>
+                <li><a href="#" class="task-settings-item block px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100" data-section="categories">Task Categories</a></li>
+                <li><a href="#" class="task-settings-item block px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100" data-section="custom-poi">Custom POI</a></li>
+                <li><a href="#" class="task-settings-item block px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100" data-section="checkpoints">Checkpoints</a></li>
+                <li><a href="#" class="task-settings-item block px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100" data-section="location-zone">Location Zone</a></li>
+                <li><a href="#" class="task-settings-item block px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100" data-section="documents">Documents</a></li>
+            </ul>
+        </div>
+
+        <!-- Content Area -->
+        <div class="md:col-span-3 bg-white p-6 rounded-lg shadow">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <a href="task.html" id="backToTasksBtn" class="inline-flex items-center text-sm text-gray-600 hover:text-gray-800 mb-2">
+                        <i class="fas fa-arrow-left mr-2"></i> Back to Tasks
+                    </a>
+                    <h2 class="text-2xl font-bold text-gray-800" id="sectionTitle">Task Templates</h2>
+                    <p class="text-gray-600" id="sectionDescription">Manage task templates.</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <input type="text" id="searchInput" placeholder="Search by name..." class="px-3 py-2 border border-gray-300 rounded-md">
+                    <button id="addItemBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"><i class="fas fa-plus mr-2"></i>Add</button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50" id="tableHeader"></thead>
+                    <tbody id="tableBody" class="bg-white divide-y divide-gray-200"></tbody>
+                </table>
+            </div>
+
+            <div class="mt-4 flex justify-end items-center space-x-2">
+                <button id="prevPage" class="px-3 py-1 bg-gray-200 rounded-md hover:bg-gray-300">Previous</button>
+                <span id="pageInfo" class="text-sm text-gray-700">Page 1 of 1</span>
+                <button id="nextPage" class="px-3 py-1 bg-gray-200 rounded-md hover:bg-gray-300">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div id="taskSettingModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="modalTitle" class="text-lg font-semibold text-gray-800">Add Item</h3>
+                    <button id="closeModal" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+                </div>
+                <form id="taskSettingForm" class="space-y-4">
+                    <!-- Dynamic form fields rendered here -->
+                </form>
+                <div class="flex justify-end space-x-2 mt-6">
+                    <button type="button" id="cancelModalBtn" class="bg-gray-400 text-white px-4 py-2 rounded-md hover:bg-gray-500">Cancel</button>
+                    <button type="submit" form="taskSettingForm" id="saveModalBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/task-settings.js"></script>
+</body>
+</html>
+

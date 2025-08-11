@@ -12,9 +12,14 @@ class StaffPage {
 
     init() {
         this.checkAuth();
+        this.applyAccessVisibility('staff');
         this.loadStaff();
         this.bindEvents();
         this.applyFilter();
+        // Show reset button only for system admin
+        if (this.currentUser.role === 'system_admin') {
+            $('#resetStaffSampleBtn').removeClass('hidden');
+        }
     }
 
     checkAuth() {
@@ -29,13 +34,38 @@ class StaffPage {
         this.canManageStaff = (this.currentUser.role === 'system_admin' || this.currentUser.role === 'manager_licensee');
     }
 
+    applyAccessVisibility(currentPageKey) {
+        try {
+            const rolesV2 = JSON.parse(localStorage.getItem('userRolesV2')||'[]');
+            const pagesV2 = JSON.parse(localStorage.getItem('accessPagesV2')||'{}');
+            const roleKey = this.currentUser.role;
+            let roleRecord = rolesV2.find(r => r.accessLevel === roleKey || (r.name||'').toLowerCase().replace(/\s+/g,'_') === roleKey);
+            if (!roleRecord && roleKey === 'manager_licensee') {
+                roleRecord = rolesV2.find(r => r.accessLevel === 'manager');
+            }
+            const pages = roleRecord ? pagesV2[roleRecord.id] : null;
+            if (pages) {
+                const map = {
+                    dashboard: 'dashboard.html', task: 'task.html', staff: 'staff.html', schedule: 'schedule.html',
+                    locate: 'locate.html', documents: 'documents.html', reports: 'reports.html', messages: 'message-center.html', settings: 'settings.html'
+                };
+                Object.entries(map).forEach(([key, href]) => { if (!pages[key]) { $(`a[href="${href}"]`).hide(); } });
+                if (!pages[currentPageKey]) {
+                    const order = ['dashboard','task','staff','schedule','locate','documents','reports','messages','settings'];
+                    for (const key of order) { if (pages[key]) { window.location.href = map[key]; return; } }
+                }
+            }
+        } catch (e) { /* no-op */ }
+    }
+
     loadStaff() {
-        this.staff = JSON.parse(localStorage.getItem('staff')) || [
-            { id: 1, name: 'Alice Wong', contract: 'CON001', role: 'manager', status: 'active' },
-            { id: 2, name: 'Bob Lee', contract: 'CON002', role: 'staff', status: 'active' },
-            { id: 3, name: 'Charlie Chan', contract: 'CON001', role: 'system_admin', status: 'active' }
-        ];
-        localStorage.setItem('staff', JSON.stringify(this.staff));
+        const existing = JSON.parse(localStorage.getItem('staff')) || [];
+        if (existing.length === 0) {
+            this.staff = this.generateSampleStaff();
+            localStorage.setItem('staff', JSON.stringify(this.staff));
+        } else {
+            this.staff = existing;
+        }
         this.filteredStaff = [...this.staff];
     }
 
@@ -93,6 +123,14 @@ class StaffPage {
             const id = parseInt($(e.currentTarget).data('id'));
             this.openEditModal(id);
         });
+
+        // Reset sample data (admin only)
+        $(document).on('click', '#resetStaffSampleBtn', () => {
+            if (!confirm('This will remove existing staff and regenerate sample data. Continue?')) return;
+            this.staff = this.generateSampleStaff();
+            localStorage.setItem('staff', JSON.stringify(this.staff));
+            this.applyFilter();
+        });
     }
 
     renderTable() {
@@ -107,9 +145,10 @@ class StaffPage {
             const statusBadge = s.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
             const row = `
                 <tr class="hover:bg-gray-50" data-id="${s.id}">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${s.employeeId || ''}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${s.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${s.jobTitle || ''}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${this.formatRole(s.role)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${s.contract || ''}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusBadge}">${s.status.toUpperCase()}</span></td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button class="edit-staff text-indigo-600 hover:text-indigo-900 mr-3" data-id="${s.id}"><i class="fas fa-edit"></i> Edit</button>
@@ -152,10 +191,16 @@ class StaffPage {
         this.editingId = id;
         $('#staffModalTitle').text('Edit Staff');
         this.populateRoleOptions();
-        $('#staffId').val(record.id);
-        $('#staffName').val(record.name);
-        $('#staffContract').val(record.contract || '');
+        $('#recordId').val(record.id);
+        $('#staffEmployeeId').val(record.employeeId || '');
+        $('#staffSystemId').val(record.systemId || '');
+        $('#staffName').val(record.name || '');
+        $('#staffChineseName').val(record.chineseName || '');
+        $('#staffGender').val(record.gender || '');
+        $('#staffJobTitle').val(record.jobTitle || '');
+        $('#staffContractNo').val(record.contractNo || '');
         $('#staffRoleSelect').val(record.role);
+        $('#staffTeam').val(record.team || '');
         $('#staffStatus').val(record.status || 'active');
         this.showModal();
     }
@@ -190,21 +235,29 @@ class StaffPage {
     }
 
     submitStaff() {
-        const name = $('#staffName').val().trim();
-        const contract = $('#staffContract').val().trim();
-        const role = $('#staffRoleSelect').val();
-        const status = $('#staffStatus').val();
-        if (!name || !contract || !role) {
+        const payload = {
+            employeeId: $('#staffEmployeeId').val().trim(),
+            systemId: $('#staffSystemId').val().trim(),
+            name: $('#staffName').val().trim(),
+            chineseName: $('#staffChineseName').val().trim(),
+            gender: $('#staffGender').val(),
+            jobTitle: $('#staffJobTitle').val().trim(),
+            contractNo: $('#staffContractNo').val().trim(),
+            role: $('#staffRoleSelect').val(),
+            team: $('#staffTeam').val().trim(),
+            status: $('#staffStatus').val()
+        };
+        if (!payload.employeeId || !payload.name || !payload.role) {
             alert('Please fill in all required fields');
             return;
         }
         if (this.isEditing && this.editingId) {
             const idx = this.staff.findIndex(s => s.id === this.editingId);
             if (idx !== -1) {
-                this.staff[idx] = { ...this.staff[idx], name, contract, role, status };
+                this.staff[idx] = { ...this.staff[idx], ...payload };
             }
         } else {
-            const newRecord = { id: Date.now(), name, contract, role, status };
+            const newRecord = { id: Date.now(), ...payload };
             this.staff.push(newRecord);
         }
         localStorage.setItem('staff', JSON.stringify(this.staff));
@@ -219,6 +272,28 @@ class StaffPage {
 
     hideModal() {
         $('#staffModal').addClass('hidden').hide();
+    }
+
+    generateSampleStaff() {
+        const samples = [];
+        const roles = ['manager', 'staff', 'system_admin'];
+        const jobTitles = ['Manager', 'Technician', 'Officer', 'Supervisor'];
+        for (let i = 1; i <= 25; i++) {
+            samples.push({
+                id: i,
+                employeeId: `S${String(i).padStart(4,'0')}`,
+                systemId: `U${String(1000 + i)}`,
+                name: `Sample User ${i}`,
+                chineseName: `樣本${i}`,
+                gender: i % 2 === 0 ? 'male' : 'female',
+                jobTitle: jobTitles[i % jobTitles.length],
+                contractNo: `CON${String(100 + (i % 5)).padStart(3,'0')}`,
+                role: roles[i % roles.length],
+                team: `Team ${String.fromCharCode(65 + (i % 4))}`,
+                status: i % 7 === 0 ? 'inactive' : 'active'
+            });
+        }
+        return samples;
     }
 }
 

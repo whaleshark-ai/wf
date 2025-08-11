@@ -17,8 +17,9 @@ class LoginPage {
     checkExistingSession() {
         const currentUser = localStorage.getItem('currentUser');
         if (currentUser) {
-            // Redirect to dashboard if user is already logged in
-            window.location.href = 'dashboard.html';
+            const user = JSON.parse(currentUser);
+            const landing = this.getLandingPathForUser(user);
+            window.location.href = landing;
         }
     }
 
@@ -88,9 +89,43 @@ class LoginPage {
         // Store user session
         const user = { role: role };
         localStorage.setItem('currentUser', JSON.stringify(user));
-        
-        // Redirect to dashboard
-        window.location.href = 'dashboard.html';
+        const landing = this.getLandingPathForUser(user);
+        window.location.href = landing;
+    }
+
+    getLandingPathForUser(user) {
+        // Access v2 storage; fallback to default order
+        const rolesV2 = JSON.parse(localStorage.getItem('userRolesV2')) || [];
+        const pagesV2 = JSON.parse(localStorage.getItem('accessPagesV2')) || {};
+        // map role string to a role id in V2 if names match; else fallback
+        let roleRecord = rolesV2.find(r => r.accessLevel === user.role || r.name.toLowerCase().replace(/\s+/g,'_') === user.role);
+        if (!roleRecord && user.role === 'manager_licensee') {
+            roleRecord = rolesV2.find(r => r.accessLevel === 'manager');
+        }
+        // default order of pages for landing selection
+        const order = ['dashboard','task','staff','schedule','locate','documents','reports','message_center','settings'];
+        const pathMap = {
+            dashboard: 'dashboard.html',
+            task: 'task.html',
+            staff: 'staff.html',
+            schedule: 'schedule.html',
+            locate: 'locate.html',
+            documents: 'documents.html',
+            reports: 'reports.html',
+            message_center: 'message-center.html',
+            settings: 'settings.html'
+        };
+        // If we have v2 config and role id
+        if (roleRecord && pagesV2[roleRecord.id]) {
+            const pages = pagesV2[roleRecord.id];
+            for (const key of order) {
+                const normalizedKey = key === 'message_center' ? 'messages' : key;
+                if (pages[normalizedKey]) return pathMap[key];
+            }
+        }
+        // Fallback: choose based on role string
+        if (user.role === 'system_admin' || user.role === 'manager' || user.role === 'manager_licensee') return 'dashboard.html';
+        return 'task.html';
     }
 }
 

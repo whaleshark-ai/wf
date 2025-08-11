@@ -10,6 +10,7 @@ class ContractsManagementPage {
 
     init() {
         this.checkAuth();
+        this.applyAccessVisibility('settings');
         this.loadContractsData();
         this.bindEvents();
         this.renderContractsTable();
@@ -30,6 +31,30 @@ class ContractsManagementPage {
             alert('Access denied. Only System Admin and Manager roles can view contracts.');
             window.location.href = 'settings.html';
         }
+    }
+
+    applyAccessVisibility(currentPageKey) {
+        try {
+            const rolesV2 = JSON.parse(localStorage.getItem('userRolesV2')||'[]');
+            const pagesV2 = JSON.parse(localStorage.getItem('accessPagesV2')||'{}');
+            const roleKey = this.currentUser.role;
+            let roleRecord = rolesV2.find(r => r.accessLevel === roleKey || (r.name||'').toLowerCase().replace(/\s+/g,'_') === roleKey);
+            if (!roleRecord && roleKey === 'manager_licensee') {
+                roleRecord = rolesV2.find(r => r.accessLevel === 'manager');
+            }
+            const pages = roleRecord ? pagesV2[roleRecord.id] : null;
+            if (pages) {
+                const map = {
+                    dashboard: 'dashboard.html', task: 'task.html', staff: 'staff.html', schedule: 'schedule.html',
+                    locate: 'locate.html', documents: 'documents.html', reports: 'reports.html', messages: 'message-center.html', settings: 'settings.html'
+                };
+                Object.entries(map).forEach(([key, href]) => { if (!pages[key]) { $(`a[href="${href}"]`).hide(); } });
+                if (!pages[currentPageKey]) {
+                    const order = ['dashboard','task','staff','schedule','locate','documents','reports','messages','settings'];
+                    for (const key of order) { if (pages[key]) { window.location.href = map[key]; return; } }
+                }
+            }
+        } catch (e) { /* no-op */ }
     }
 
     loadContractsData() {
@@ -146,21 +171,28 @@ class ContractsManagementPage {
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        ${(this.currentUser.role === 'system_admin' || this.currentUser.role === 'manager_licensee') ? `
                         <button class="edit-contract text-indigo-600 hover:text-indigo-900 mr-3" data-id="${contract.id}">
                             <i class="fas fa-edit"></i> Edit
                         </button>
                         <button class="delete-contract text-red-600 hover:text-red-900" data-id="${contract.id}">
                             <i class="fas fa-trash"></i> Delete
-                        </button>` : '<span class="text-gray-400 text-xs">No actions</span>'}
+                        </button>
                     </td>
                 </tr>
             `;
             tbody.append(row);
         });
 
+        // Licensee gating: if user is not licensee and not admin, hide add/edit/delete
+        const isAdmin = this.currentUser.role === 'system_admin';
+        const isLicenseeUser = !!this.currentUser.isLicensee;
+        if (!isAdmin && !isLicenseeUser) {
+            $('#addContractBtn').hide();
+            $('.edit-contract, .delete-contract').hide();
+        }
+
         // Bind edit and delete events
-        if (this.currentUser.role === 'system_admin' || this.currentUser.role === 'manager_licensee') {
+        if (true) {
             $('.edit-contract').on('click', (e) => {
                 const id = parseInt($(e.target).closest('button').data('id'));
                 this.editContract(id);

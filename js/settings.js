@@ -7,6 +7,7 @@ class SettingsPage {
 
     init() {
         this.checkAuth();
+        this.applyAccessVisibility('settings');
         this.loadSettingsPage();
         this.bindEvents();
     }
@@ -22,15 +23,39 @@ class SettingsPage {
         $('#currentRole').text(this.currentUser.role.replace('_', ' ').toUpperCase());
     }
 
+    applyAccessVisibility(currentPageKey) {
+        try {
+            const rolesV2 = JSON.parse(localStorage.getItem('userRolesV2')||'[]');
+            const pagesV2 = JSON.parse(localStorage.getItem('accessPagesV2')||'{}');
+            const roleKey = this.currentUser.role;
+            let roleRecord = rolesV2.find(r => r.accessLevel === roleKey || (r.name||'').toLowerCase().replace(/\s+/g,'_') === roleKey);
+            if (!roleRecord && roleKey === 'manager_licensee') {
+                roleRecord = rolesV2.find(r => r.accessLevel === 'manager');
+            }
+            const pages = roleRecord ? pagesV2[roleRecord.id] : null;
+            if (pages) {
+                const map = {
+                    dashboard: 'dashboard.html', task: 'task.html', staff: 'staff.html', schedule: 'schedule.html',
+                    locate: 'locate.html', documents: 'documents.html', reports: 'reports.html', messages: 'message-center.html', settings: 'settings.html'
+                };
+                Object.entries(map).forEach(([key, href]) => { if (!pages[key]) { $(`a[href="${href}"]`).hide(); } });
+                if (!pages[currentPageKey]) {
+                    const order = ['dashboard','task','staff','schedule','locate','documents','reports','messages','settings'];
+                    for (const key of order) { if (pages[key]) { window.location.href = map[key]; return; } }
+                }
+            }
+        } catch (e) { /* no-op */ }
+    }
+
     loadSettingsPage() {
         const role = this.currentUser.role;
         const canViewSystem = role === 'system_admin';
         const canViewContract = role === 'system_admin' || role === 'manager' || role === 'manager_licensee';
-        const canViewTask = true;
-
-        $('#systemSettingsSection').toggle(canViewSystem);
-        $('#contractManagementSection').toggle(canViewContract);
-        $('#taskManagementSection').toggle(canViewTask);
+        // Hide side headers and menu groups when no access
+        $('#systemSettingsHeader').toggle(canViewSystem);
+        $('#systemSettingsMenu').toggle(canViewSystem);
+        $('#contractSettingsHeader').toggle(canViewContract);
+        $('#contractSettingsMenu').toggle(canViewContract);
     }
 
     bindEvents() {
@@ -41,29 +66,58 @@ class SettingsPage {
             window.location.href = 'login.html';
         });
 
-        // Bind all settings buttons to redirect to their respective management pages
-        $('button').on('click', (e) => {
-            const buttonText = $(e.target).text().toLowerCase();
-            
-            if (buttonText.includes('manage staff') || buttonText.includes('add staff')) {
-                window.location.href = 'staff-management.html';
-            } else if (buttonText.includes('manage roles') || buttonText.includes('user roles')) {
-                window.location.href = 'user-roles-management.html';
-            } else if (buttonText.includes('manage access') || buttonText.includes('access control')) {
-                window.location.href = 'access-control-management.html';
-            } else if (buttonText.includes('manage contracts') || buttonText.includes('contracts')) {
-                window.location.href = 'contracts-management.html';
-            } else if (buttonText.includes('manage services') || buttonText.includes('services')) {
-                window.location.href = 'services-management.html';
-            } else if (buttonText.includes('manage templates') || buttonText.includes('task templates')) {
-                window.location.href = 'task-templates-management.html';
-            } else if (buttonText.includes('manage categories') || buttonText.includes('task categories')) {
-                window.location.href = 'task-categories-management.html';
-            } else if (buttonText.includes('manage locations') || buttonText.includes('locations')) {
-                window.location.href = 'locations-management.html';
-            } else if (buttonText.includes('checkpoints')) {
-                window.location.href = 'checkpoints-management.html';
+        // Side menu navigation
+        $(document).on('click', '.settings-item', (e) => {
+            e.preventDefault();
+            const target = $(e.currentTarget).data('target');
+            let title = 'Settings';
+            let desc = '';
+            let href = '#';
+            switch(target){
+                case 'personal':
+                    title = 'Personal Settings';
+                    desc = 'Update language and font size preferences for your account.';
+                    href = 'personal-settings.html';
+                    break;
+                case 'roles':
+                    title = 'User Roles';
+                    desc = 'Manage user roles and job nature.';
+                    href = 'user-roles-management.html';
+                    break;
+                case 'access':
+                    title = 'Access Control';
+                    desc = 'Configure page/menu visibility by role.';
+                    href = 'access-control-management.html';
+                    break;
+                case 'contracts':
+                    title = 'Contracts';
+                    desc = 'Manage contracts.';
+                    href = 'contracts-management.html';
+                    break;
+                case 'services':
+                    title = 'Services';
+                    desc = 'Manage service types.';
+                    href = 'services-management.html';
+                    break;
+                case 'departments':
+                    title = 'Departments';
+                    desc = 'Manage departments.';
+                    href = 'departments-management.html';
+                    break;
+                case 'companies':
+                    title = 'Companies';
+                    desc = 'Manage companies.';
+                    href = 'companies-management.html';
+                    break;
+                case 'jobtitles':
+                    title = 'Job Titles';
+                    desc = 'Manage job titles.';
+                    href = 'job-titles-management.html';
+                    break;
             }
+            $('#settingsDetailTitle').text(title);
+            $('#settingsDetailDesc').text(desc);
+            $('#settingsOpenBtn').attr('href', href);
         });
 
         // Close modal events

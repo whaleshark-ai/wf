@@ -34,77 +34,44 @@
         </div>
     </nav>
 
-    <!-- Content Area -->
-    <div class="max-w-7xl mx-auto px-4 py-6">
-        <div class="mb-6">
-            <h2 class="text-2xl font-bold text-gray-800">Settings</h2>
-        </div>
-        
-        <!-- System Settings Section -->
-        <div id="systemSettingsSection" class="mb-8">
-            <h3 class="text-xl font-semibold text-gray-800 mb-4">System Settings</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h4 class="text-lg font-semibold text-gray-800 mb-2">User Roles</h4>
-                    <p class="text-gray-600 mb-4">Manage user roles and job nature</p>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Roles</button>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Access Control</h4>
-                    <p class="text-gray-600 mb-4">Control menu visibility by role</p>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Access</button>
-                </div>
-            </div>
-        </div>
+    <!-- Content Area: Two-column layout -->
+    <div class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-4 gap-6">
+        <!-- Left Side Menu -->
+        <aside class="md:col-span-1 bg-white p-6 rounded-lg shadow">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3">Personal Settings</h3>
+            <ul class="mb-6 space-y-1">
+                <li><a href="#" class="settings-item block px-3 py-2 rounded text-gray-700 hover:bg-gray-100" data-target="personal">Profile & Preferences</a></li>
+            </ul>
+            <h3 id="systemSettingsHeader" class="text-lg font-semibold text-gray-800 mb-3">System Settings</h3>
+            <ul class="mb-6 space-y-1" id="systemSettingsMenu">
+                <li><a href="#" class="settings-item block px-3 py-2 rounded text-gray-700 hover:bg-gray-100" data-target="roles">User Roles</a></li>
+                <li><a href="#" class="settings-item block px-3 py-2 rounded text-gray-700 hover:bg-gray-100" data-target="access">Access Control</a></li>
+            </ul>
+            <h3 id="contractSettingsHeader" class="text-lg font-semibold text-gray-800 mb-3">Contract Settings</h3>
+            <ul class="space-y-1" id="contractSettingsMenu">
+                <li><a href="#" class="settings-item block px-3 py-2 rounded text-gray-700 hover:bg-gray-100" data-target="contracts">Contracts</a></li>
+                <li><a href="#" class="settings-item block px-3 py-2 rounded text-gray-700 hover:bg-gray-100" data-target="services">Services</a></li>
+                <li><a href="#" class="settings-item block px-3 py-2 rounded text-gray-700 hover:bg-gray-100" data-target="departments">Departments</a></li>
+                <li><a href="#" class="settings-item block px-3 py-2 rounded text-gray-700 hover:bg-gray-100" data-target="companies">Companies</a></li>
+                <li><a href="#" class="settings-item block px-3 py-2 rounded text-gray-700 hover:bg-gray-100" data-target="jobtitles">Job Titles</a></li>
+            </ul>
+        </aside>
 
-        <!-- Contract Management Section -->
-        <div id="contractManagementSection" class="mb-8">
-            <h3 class="text-xl font-semibold text-gray-800 mb-4">Contract Management</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Contracts</h4>
-                    <p class="text-gray-600 mb-4">Manage contracts</p>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Contracts</button>
+        <!-- Right Content Panel -->
+        <section class="md:col-span-3 bg-white p-6 rounded-lg shadow">
+            <div class="flex items-start justify-between mb-4">
+                <div>
+                    <h2 id="settingsDetailTitle" class="text-2xl font-bold text-gray-800">Personal Settings</h2>
+                    <p id="settingsDetailDesc" class="text-gray-600 mt-1">Update language and font size preferences for your account.</p>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Services</h4>
-                    <p class="text-gray-600 mb-4">Manage service types</p>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Services</button>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Staff</h4>
-                    <p class="text-gray-600 mb-4">Manage staff members</p>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Staff</button>
+                <div>
+                    <a id="settingsOpenBtn" href="personal-settings.html" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 inline-flex items-center"><i class="fas fa-arrow-right mr-2"></i>Open</a>
                 </div>
             </div>
-        </div>
-
-        <!-- Task Management Section -->
-        <div id="taskManagementSection" class="mb-8">
-            <h3 class="text-xl font-semibold text-gray-800 mb-4">Task Management</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Task Templates</h4>
-                    <p class="text-gray-600 mb-4">Manage task templates</p>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Templates</button>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Task Categories</h4>
-                    <p class="text-gray-600 mb-4">Manage task categories</p>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Categories</button>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Locations</h4>
-                    <p class="text-gray-600 mb-4">Manage locations</p>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Locations</button>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Checkpoints</h4>
-                    <p class="text-gray-600 mb-4">Manage checkpoints (groups of POIs)</p>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Checkpoints</button>
-                </div>
+            <div id="settingsDetailHelp" class="text-sm text-gray-500">
+                Select an item from the left menu to manage the corresponding settings.
             </div>
-        </div>
+        </section>
     </div>
 
     <!-- Settings Modals -->

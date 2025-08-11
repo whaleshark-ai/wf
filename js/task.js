@@ -7,6 +7,7 @@ class TaskPage {
         this.locations = [];
         this.taskCategories = [];
         this.taskSubcategories = [];
+        this.documents = [];
         this.filteredTasks = [];
         this.pagination = { page: 1, pageSize: 12, totalPages: 1 };
         this.init();
@@ -14,6 +15,7 @@ class TaskPage {
 
     init() {
         this.checkAuth();
+        this.applyAccessVisibility('task');
         this.loadData();
         this.bindEvents();
         this.loadTaskPage();
@@ -30,12 +32,37 @@ class TaskPage {
         $('#currentRole').text(this.currentUser.role.replace('_', ' ').toUpperCase());
     }
 
+    applyAccessVisibility(currentPageKey) {
+        try {
+            const rolesV2 = JSON.parse(localStorage.getItem('userRolesV2')||'[]');
+            const pagesV2 = JSON.parse(localStorage.getItem('accessPagesV2')||'{}');
+            const roleKey = this.currentUser.role;
+            let roleRecord = rolesV2.find(r => r.accessLevel === roleKey || (r.name||'').toLowerCase().replace(/\s+/g,'_') === roleKey);
+            if (!roleRecord && roleKey === 'manager_licensee') {
+                roleRecord = rolesV2.find(r => r.accessLevel === 'manager');
+            }
+            const pages = roleRecord ? pagesV2[roleRecord.id] : null;
+            if (pages) {
+                const map = {
+                    dashboard: 'dashboard.html', task: 'task.html', staff: 'staff.html', schedule: 'schedule.html',
+                    locate: 'locate.html', documents: 'documents.html', reports: 'reports.html', messages: 'message-center.html', settings: 'settings.html'
+                };
+                Object.entries(map).forEach(([key, href]) => { if (!pages[key]) { $(`a[href="${href}"]`).hide(); } });
+                if (!pages[currentPageKey]) {
+                    const order = ['dashboard','task','staff','schedule','locate','documents','reports','messages','settings'];
+                    for (const key of order) { if (pages[key]) { window.location.href = map[key]; return; } }
+                }
+            }
+        } catch (e) { /* no-op */ }
+    }
+
     loadData() {
         this.tasks = JSON.parse(localStorage.getItem('tasks')) || this.getSampleTasks();
         this.staff = JSON.parse(localStorage.getItem('staff')) || this.getSampleStaff();
         this.locations = JSON.parse(localStorage.getItem('locations')) || this.getSampleLocations();
         this.taskCategories = JSON.parse(localStorage.getItem('taskCategories')) || this.getSampleTaskCategories();
         this.taskSubcategories = JSON.parse(localStorage.getItem('taskSubcategories')) || this.getSampleTaskSubcategories();
+        this.documents = JSON.parse(localStorage.getItem('documents')) || [];
     }
 
     bindEvents() {
@@ -212,7 +239,21 @@ class TaskPage {
             </div>
         `).join('');
         $('#staffList').html(staffOptions);
+
+        // Populate documents dropdown
+        this.renderDocumentOptions();
     }
+
+    renderDocumentOptions() {
+        const select = $('#documentSelect');
+        const options = (this.documents || []).map((d) => {
+            const label = `${d.filename} (${d.category})`;
+            return `<option value="${d.id || ''}">${label}</option>`;
+        }).join('');
+        select.html('<option value="">Select document...</option>' + options);
+    }
+
+    // removed filterDocumentOptions; simple dropdown retained
 
     // Sample checkpoints with locations references
     getSampleCheckpoints() {
@@ -333,6 +374,15 @@ class TaskPage {
             }).get(),
             createdAt: new Date().toISOString()
         };
+
+        // Attach selected document metadata if any
+        const selectedDocId = $('#documentSelect').val();
+        if (selectedDocId) {
+            const doc = (this.documents || []).find(d => String(d.id) === String(selectedDocId));
+            if (doc) {
+                taskData.document = { id: doc.id, filename: doc.filename, url: doc.url, category: doc.category };
+            }
+        }
 
         if (!taskData.name || !taskData.startTime || !taskData.endTime) {
             alert('Please fill in all required fields');

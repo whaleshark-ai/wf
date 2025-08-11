@@ -61,7 +61,11 @@
                 <div id="weekLabel" class="text-gray-700 font-medium"></div>
                 <button id="nextWeek" class="px-3 py-2 border border-gray-300 rounded hover:bg-gray-50"><i class="fas fa-chevron-right"></i></button>
             </div>
-            <button id="todayBtn" class="text-sm text-blue-600 hover:text-blue-800">Today</button>
+            <div class="flex items-center gap-2">
+                <button id="todayBtn" class="text-sm text-blue-600 hover:text-blue-800">Today</button>
+                <button id="addShiftTemplateBtn" class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 inline-flex items-center"><i class="fas fa-plus mr-2"></i>Add Shift Template</button>
+                <button id="bulkAssignBtn" class="px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 inline-flex items-center"><i class="fas fa-users mr-2"></i>Bulk Assign Shifts</button>
+            </div>
         </div>
 
         <div class="bg-white shadow-md rounded-lg overflow-hidden">
@@ -83,6 +87,104 @@
                         <!-- populated by JS -->
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Shift Template Modal -->
+    <div id="shiftTemplateModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="templateModalTitle" class="text-lg font-semibold text-gray-800">Add Shift Template</h3>
+                    <button class="close-template-modal text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+                </div>
+                <form id="shiftTemplateForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                        <input type="text" id="tplName" class="w-full px-3 py-2 border rounded" placeholder="e.g., Day Shift" required>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Shift Type</label>
+                            <select id="tplShiftType" class="w-full px-3 py-2 border rounded">
+                                <option value="work">Work</option>
+                                <option value="on_leave">On leave</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <select id="tplStatus" class="w-full px-3 py-2 border rounded">
+                                <option value="active" selected>Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                            <input type="time" id="tplStart" class="w-full px-3 py-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                            <input type="time" id="tplEnd" class="w-full px-3 py-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Location Zone</label>
+                            <select id="tplLocationZone" class="w-full px-3 py-2 border rounded">
+                                <option value="">Select zone...</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+                <div class="flex justify-end space-x-2 mt-6">
+                    <button type="button" class="close-template-modal bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">Cancel</button>
+                    <button type="button" id="saveShiftTemplateBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save Template</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Assign Modal -->
+    <div id="bulkAssignModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-16 mx-auto p-5 border w-11/12 md:w-5/6 lg:w-2/3 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">Bulk Assign Shifts</h3>
+                    <button class="close-bulk-modal text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="md:col-span-1 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Shift Template</label>
+                            <select id="bulkTemplateSelect" class="w-full px-3 py-2 border rounded"></select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Apply to Days</label>
+                            <div class="grid grid-cols-3 gap-2 text-sm" id="bulkDays">
+                                <label class="inline-flex items-center"><input type="checkbox" value="0" class="mr-2">Mon</label>
+                                <label class="inline-flex items-center"><input type="checkbox" value="1" class="mr-2">Tue</label>
+                                <label class="inline-flex items-center"><input type="checkbox" value="2" class="mr-2">Wed</label>
+                                <label class="inline-flex items-center"><input type="checkbox" value="3" class="mr-2">Thu</label>
+                                <label class="inline-flex items-center"><input type="checkbox" value="4" class="mr-2">Fri</label>
+                                <label class="inline-flex items-center"><input type="checkbox" value="5" class="mr-2">Sat</label>
+                                <label class="inline-flex items-center"><input type="checkbox" value="6" class="mr-2">Sun</label>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="bulkRepeat" class="mr-2">
+                            <label for="bulkRepeat" class="text-sm text-gray-700">Repeat weekly for upcoming month</label>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Staff</label>
+                        <div id="bulkStaffList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-80 overflow-y-auto border rounded p-3"></div>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2 mt-6">
+                    <button type="button" class="close-bulk-modal bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">Cancel</button>
+                    <button type="button" id="applyBulkAssignBtn" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Apply</button>
+                </div>
             </div>
         </div>
     </div>

@@ -39,9 +39,8 @@ class UserRolesManagementPage {
         if (this.roles.length === 0) {
             this.roles = [
                 { id: 1, name: 'System Admin', jobNature: 'system_admin', status: 'active', createdDate: '2024-01-01' },
-                { id: 2, name: 'Contract Management', jobNature: 'contract_management', status: 'active', createdDate: '2024-01-01' },
-                { id: 3, name: 'Frontline Staff', jobNature: 'frontline_staff', status: 'active', createdDate: '2024-01-01' },
-                { id: 4, name: 'Contract Supervisor', jobNature: 'contract_management', status: 'inactive', createdDate: '2024-01-01' }
+                { id: 2, name: 'Manager', jobNature: 'manager', status: 'active', createdDate: '2024-01-01' },
+                { id: 3, name: 'Frontline', jobNature: 'frontline', status: 'active', createdDate: '2024-01-01' }
             ];
             localStorage.setItem('userRoles', JSON.stringify(this.roles));
         }
@@ -103,10 +102,10 @@ class UserRolesManagementPage {
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                             role.jobNature === 'system_admin' ? 'bg-purple-100 text-purple-800' :
-                            role.jobNature === 'contract_management' ? 'bg-blue-100 text-blue-800' :
+                            role.jobNature === 'manager' ? 'bg-blue-100 text-blue-800' :
                             'bg-green-100 text-green-800'
                         }">
-                            ${this.formatJobNature(role.jobNature)}
+                            ${this.formatAccessLevel(role.jobNature)}
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
@@ -152,13 +151,9 @@ class UserRolesManagementPage {
         return date.toLocaleDateString();
     }
 
-    formatJobNature(jobNature) {
-        const map = {
-            system_admin: 'System Admin',
-            contract_management: 'Contract Management',
-            frontline_staff: 'Frontline staff'
-        };
-        return map[jobNature] || jobNature.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    formatAccessLevel(level) {
+        const map = { system_admin: 'System Admin', manager: 'Manager', frontline: 'Frontline' };
+        return map[level] || level;
     }
 
     showAddModal() {

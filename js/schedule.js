@@ -6,11 +6,14 @@ class SchedulePage {
         this.teams = [];
         this.filteredStaff = [];
         this.shifts = {}; // { staffId: [{dateISO, start, end, team}] }
+        this.shiftTemplates = []; // [{id, type, start, end, zone, status}]
+        this.locationZones = []; // from task settings
         this.init();
     }
 
     init() {
         this.checkAuth();
+        this.applyAccessVisibility('schedule');
         this.loadData();
         this.bindEvents();
         this.renderFilters();
@@ -33,15 +36,33 @@ class SchedulePage {
         });
     }
 
+    applyAccessVisibility(currentPageKey) {
+        try {
+            const rolesV2 = JSON.parse(localStorage.getItem('userRolesV2')||'[]');
+            const pagesV2 = JSON.parse(localStorage.getItem('accessPagesV2')||'{}');
+            const roleKey = this.currentUser.role;
+            let roleRecord = rolesV2.find(r => r.accessLevel === roleKey || (r.name||'').toLowerCase().replace(/\s+/g,'_') === roleKey);
+            if (!roleRecord && roleKey === 'manager_licensee') {
+                roleRecord = rolesV2.find(r => r.accessLevel === 'manager');
+            }
+            const pages = roleRecord ? pagesV2[roleRecord.id] : null;
+            if (pages) {
+                const map = {
+                    dashboard: 'dashboard.html', task: 'task.html', staff: 'staff.html', schedule: 'schedule.html',
+                    locate: 'locate.html', documents: 'documents.html', reports: 'reports.html', messages: 'message-center.html', settings: 'settings.html'
+                };
+                Object.entries(map).forEach(([key, href]) => { if (!pages[key]) { $(`a[href="${href}"]`).hide(); } });
+                if (!pages[currentPageKey]) {
+                    const order = ['dashboard','task','staff','schedule','locate','documents','reports','messages','settings'];
+                    for (const key of order) { if (pages[key]) { window.location.href = map[key]; return; } }
+                }
+            }
+        } catch (e) { /* no-op */ }
+    }
+
     loadData() {
         // Staff
-        this.staff = JSON.parse(localStorage.getItem('staff')) || [
-            { id: 1, name: 'Alice Wong', contract: 'CON001', role: 'manager', status: 'active', team: 'Team A' },
-            { id: 2, name: 'Bob Lee', contract: 'CON002', role: 'staff', status: 'active', team: 'Team B' },
-            { id: 3, name: 'Charlie Chan', contract: 'CON001', role: 'system_admin', status: 'active', team: 'Team A' },
-            { id: 4, name: 'Donna Ng', contract: 'CON003', role: 'staff', status: 'active', team: 'Team C' }
-        ];
-        localStorage.setItem('staff', JSON.stringify(this.staff));
+        this.staff = JSON.parse(localStorage.getItem('staff')) || [];
 
         // Teams from staff list
         const uniqueTeams = new Set(this.staff.map(s => s.team).filter(Boolean));
@@ -65,6 +86,19 @@ class SchedulePage {
         }
 
         this.filteredStaff = [...this.staff];
+
+        // Location zones
+        this.locationZones = JSON.parse(localStorage.getItem('locationZones')) || [
+            { id: 1, name: 'Zone 1' },
+            { id: 2, name: 'Zone 2' }
+        ];
+
+        // Shift templates
+        this.shiftTemplates = JSON.parse(localStorage.getItem('shiftTemplates')) || [
+            { id: 1, name: 'Day Shift', type: 'work', start: '09:00', end: '17:00', zoneId: 1, status: 'active' },
+            { id: 2, name: 'Annual Leave', type: 'on_leave', start: '00:00', end: '23:59', zoneId: null, status: 'active' }
+        ];
+        localStorage.setItem('shiftTemplates', JSON.stringify(this.shiftTemplates));
     }
 
     bindEvents() {
@@ -86,6 +120,16 @@ class SchedulePage {
             this.renderWeekHeader();
             this.renderTable();
         });
+
+        // Templates modal open/close
+        $('#addShiftTemplateBtn').on('click', () => this.openTemplateModal());
+        $(document).on('click', '.close-template-modal', () => this.hideTemplateModal());
+        $('#saveShiftTemplateBtn').on('click', () => this.saveShiftTemplate());
+
+        // Bulk assign modal
+        $('#bulkAssignBtn').on('click', () => this.openBulkAssignModal());
+        $(document).on('click', '.close-bulk-modal', () => this.hideBulkModal());
+        $('#applyBulkAssignBtn').on('click', () => this.applyBulkAssign());
     }
 
     renderFilters() {
@@ -98,8 +142,10 @@ class SchedulePage {
         const query = ($('#staffSearch').val() || '').toLowerCase().trim();
         this.filteredStaff = this.staff.filter(s => {
             const matchTeam = team === 'all' || (s.team || '') === team;
-            const matchName = (s.name || '').toLowerCase().includes(query);
-            return matchTeam && matchName;
+            const nameMatch = (s.name || '').toLowerCase().includes(query);
+            const idMatch = (String(s.employeeId || '')).toLowerCase().includes(query);
+            const matchQuery = !query || nameMatch || idMatch;
+            return matchTeam && matchQuery;
         });
         this.renderTable();
     }
@@ -130,6 +176,78 @@ class SchedulePage {
                 </tr>`;
             tbody.append(row);
         });
+    }
+
+    // Templates modal helpers
+    openTemplateModal() {
+        // populate zones
+        const zoneOptions = this.locationZones.map(z => `<option value="${z.id}">${z.name}</option>`).join('');
+        $('#tplLocationZone').html('<option value="">Select zone...</option>' + zoneOptions);
+        $('#templateModalTitle').text('Add Shift Template');
+        $('#shiftTemplateForm')[0].reset();
+        $('#shiftTemplateModal').removeClass('hidden').show();
+    }
+    hideTemplateModal() { $('#shiftTemplateModal').addClass('hidden').hide(); }
+    saveShiftTemplate() {
+        const name = $('#tplName').val().trim();
+        const type = $('#tplShiftType').val();
+        const start = $('#tplStart').val();
+        const end = $('#tplEnd').val();
+        const zoneId = $('#tplLocationZone').val() ? parseInt($('#tplLocationZone').val(),10) : null;
+        const status = $('#tplStatus').val();
+        if (!name || !type || !start || !end) { alert('Please fill in Name, Shift Type, Start and End.'); return; }
+        const tpl = { id: Date.now(), name, type, start, end, zoneId, status };
+        this.shiftTemplates.push(tpl);
+        localStorage.setItem('shiftTemplates', JSON.stringify(this.shiftTemplates));
+        this.hideTemplateModal();
+        alert('Template saved.');
+    }
+
+    // Bulk assign helpers
+    openBulkAssignModal() {
+        // template select
+        const tplOptions = this.shiftTemplates.filter(t => t.status === 'active').map(t => {
+            const label = `${t.name} (${t.type === 'work' ? 'Work' : 'On leave'} ${t.start}-${t.end})`;
+            return `<option value="${t.id}">${label}</option>`;
+        }).join('');
+        $('#bulkTemplateSelect').html(tplOptions);
+        // staff list
+        const staffBoxes = this.staff.map(s => `
+            <label class="inline-flex items-center"><input type="checkbox" value="${s.id}" class="mr-2">${s.name} <span class="text-xs text-gray-500 ml-1">(${s.team || ''})</span></label>
+        `).join('');
+        $('#bulkStaffList').html(staffBoxes);
+        // clear days
+        $('#bulkDays input[type="checkbox"]').prop('checked', false);
+        $('#bulkRepeat').prop('checked', false);
+        $('#bulkAssignModal').removeClass('hidden').show();
+    }
+    hideBulkModal() { $('#bulkAssignModal').addClass('hidden').hide(); }
+    applyBulkAssign() {
+        const tplId = parseInt($('#bulkTemplateSelect').val(), 10);
+        const tpl = this.shiftTemplates.find(t => t.id === tplId);
+        if (!tpl) { alert('Select a shift template'); return; }
+        const selectedDays = $('#bulkDays input:checked').map(function(){ return parseInt($(this).val(),10); }).get();
+        if (selectedDays.length === 0) { alert('Select at least one day'); return; }
+        const staffIds = $('#bulkStaffList input:checked').map(function(){ return parseInt($(this).val(),10); }).get();
+        if (staffIds.length === 0) { alert('Select at least one staff'); return; }
+        const repeat = $('#bulkRepeat').is(':checked');
+
+        const weeksToApply = repeat ? 4 : 1;
+        for (let w = 0; w < weeksToApply; w++) {
+            const base = this.addDays(this.weekStart, w * 7);
+            staffIds.forEach(staffId => {
+                selectedDays.forEach(dow => {
+                    const date = this.addDays(base, dow);
+                    const dateISO = this.toISO(date);
+                    if (!this.shifts[staffId]) this.shifts[staffId] = [];
+                    this.shifts[staffId].push({ dateISO, start: tpl.start, end: tpl.end, zoneId: tpl.zoneId, type: tpl.type });
+                });
+            });
+        }
+        localStorage.setItem('shifts', JSON.stringify(this.shifts));
+        this.renderTable();
+        this.hideBulkModal();
+        alert('Shifts assigned.');
     }
 
     renderShiftCell(staffId, dateISO) {

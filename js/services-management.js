@@ -10,6 +10,7 @@ class ServicesManagementPage {
 
     init() {
         this.checkAuth();
+        this.applyAccessVisibility('settings');
         this.loadServicesData();
         this.bindEvents();
         this.renderServicesTable();
@@ -30,6 +31,30 @@ class ServicesManagementPage {
             alert('Access denied. Only System Admin and Manager roles can manage services.');
             window.location.href = 'settings.html';
         }
+    }
+
+    applyAccessVisibility(currentPageKey) {
+        try {
+            const rolesV2 = JSON.parse(localStorage.getItem('userRolesV2')||'[]');
+            const pagesV2 = JSON.parse(localStorage.getItem('accessPagesV2')||'{}');
+            const roleKey = this.currentUser.role;
+            let roleRecord = rolesV2.find(r => r.accessLevel === roleKey || (r.name||'').toLowerCase().replace(/\s+/g,'_') === roleKey);
+            if (!roleRecord && roleKey === 'manager_licensee') {
+                roleRecord = rolesV2.find(r => r.accessLevel === 'manager');
+            }
+            const pages = roleRecord ? pagesV2[roleRecord.id] : null;
+            if (pages) {
+                const map = {
+                    dashboard: 'dashboard.html', task: 'task.html', staff: 'staff.html', schedule: 'schedule.html',
+                    locate: 'locate.html', documents: 'documents.html', reports: 'reports.html', messages: 'message-center.html', settings: 'settings.html'
+                };
+                Object.entries(map).forEach(([key, href]) => { if (!pages[key]) { $(`a[href="${href}"]`).hide(); } });
+                if (!pages[currentPageKey]) {
+                    const order = ['dashboard','task','staff','schedule','locate','documents','reports','messages','settings'];
+                    for (const key of order) { if (pages[key]) { window.location.href = map[key]; return; } }
+                }
+            }
+        } catch (e) { /* no-op */ }
     }
 
     loadServicesData() {
@@ -126,6 +151,13 @@ class ServicesManagementPage {
             `;
             tbody.append(row);
         });
+        // Licensee gating for actions
+        const isAdmin = this.currentUser.role === 'system_admin';
+        const isLicenseeUser = !!this.currentUser.isLicensee;
+        if (!isAdmin && !isLicenseeUser) {
+            $('#addServiceBtn').hide();
+            $('.edit-service, .delete-service').remove();
+        }
 
         // Bind edit and delete events (delegated with gating)
         if (this.currentUser.role === 'system_admin' || this.currentUser.role === 'manager_licensee') {
