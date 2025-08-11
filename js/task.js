@@ -367,6 +367,10 @@ class TaskPage {
             startTime: $('#startTime').val(),
             endTime: $('#endTime').val(),
             duration: $('#duration').val(),
+            features: {
+                photoEvidence: $('#featurePhotoEvidence').is(':checked'),
+                earlyComplete: $('#featureEarlyComplete').is(':checked')
+            },
             location: this.getSelectedLocationForSubmit(true),
             status: 'pending',
             assignedStaff: $('#staffList input:checked').map(function() {
