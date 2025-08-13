@@ -216,9 +216,9 @@ class SchedulePage {
             <label class="inline-flex items-center"><input type="checkbox" value="${s.id}" class="mr-2">${s.name} <span class="text-xs text-gray-500 ml-1">(${s.team || ''})</span></label>
         `).join('');
         $('#bulkStaffList').html(staffBoxes);
-        // clear days
+        // clear days and end date
         $('#bulkDays input[type="checkbox"]').prop('checked', false);
-        $('#bulkRepeat').prop('checked', false);
+        $('#bulkRepeatEndDate').val('');
         $('#bulkAssignModal').removeClass('hidden').show();
     }
     hideBulkModal() { $('#bulkAssignModal').addClass('hidden').hide(); }
@@ -230,24 +230,53 @@ class SchedulePage {
         if (selectedDays.length === 0) { alert('Select at least one day'); return; }
         const staffIds = $('#bulkStaffList input:checked').map(function(){ return parseInt($(this).val(),10); }).get();
         if (staffIds.length === 0) { alert('Select at least one staff'); return; }
-        const repeat = $('#bulkRepeat').is(':checked');
+        
+        const endDateStr = $('#bulkRepeatEndDate').val();
+        let endDate = null;
+        if (endDateStr) {
+            endDate = new Date(endDateStr);
+            // Validate end date is not before current week
+            if (endDate < this.weekStart) {
+                alert('End date cannot be before the current week start date');
+                return;
+            }
+        }
 
-        const weeksToApply = repeat ? 4 : 1;
+        // Calculate how many weeks to apply based on end date
+        let weeksToApply = 1; // Default to current week only
+        if (endDate) {
+            const daysDiff = Math.floor((endDate - this.weekStart) / (1000 * 60 * 60 * 24));
+            weeksToApply = Math.floor(daysDiff / 7) + 1; // +1 to include the week containing the end date
+            weeksToApply = Math.max(1, weeksToApply); // Ensure at least 1 week
+        }
+
+        let assignedCount = 0;
         for (let w = 0; w < weeksToApply; w++) {
             const base = this.addDays(this.weekStart, w * 7);
+            
             staffIds.forEach(staffId => {
                 selectedDays.forEach(dow => {
                     const date = this.addDays(base, dow);
+                    
+                    // If we have an end date, check if this date is within range
+                    if (endDate && date > endDate) {
+                        return; // Skip this date as it's beyond the end date
+                    }
+                    
                     const dateISO = this.toISO(date);
                     if (!this.shifts[staffId]) this.shifts[staffId] = [];
                     this.shifts[staffId].push({ dateISO, start: tpl.start, end: tpl.end, zoneId: tpl.zoneId, type: tpl.type });
+                    assignedCount++;
                 });
             });
         }
+        
         localStorage.setItem('shifts', JSON.stringify(this.shifts));
         this.renderTable();
         this.hideBulkModal();
-        alert('Shifts assigned.');
+        
+        const endDateMsg = endDate ? ` until ${endDate.toLocaleDateString()}` : ' for current week only';
+        alert(`${assignedCount} shifts assigned successfully${endDateMsg}.`);
     }
 
     renderShiftCell(staffId, dateISO) {

@@ -88,7 +88,52 @@ class ContractsManagementPage {
                     endTime: '2024-10-31', 
                     serviceType: 'security', 
                     isLicensee: true, 
-                    status: 'inactive' 
+                    status: 'active' 
+                },
+                { 
+                    id: 4, 
+                    number: 'CON004', 
+                    startTime: '2024-04-01', 
+                    endTime: '2025-03-31', 
+                    serviceType: 'maintenance', 
+                    isLicensee: true, 
+                    status: 'active' 
+                },
+                { 
+                    id: 5, 
+                    number: 'CON005', 
+                    startTime: '2024-05-15', 
+                    endTime: '2024-12-15', 
+                    serviceType: 'security', 
+                    isLicensee: false, 
+                    status: 'active' 
+                },
+                { 
+                    id: 6, 
+                    number: 'CON006', 
+                    startTime: '2024-06-01', 
+                    endTime: '2025-05-31', 
+                    serviceType: 'cleaning', 
+                    isLicensee: true, 
+                    status: 'active' 
+                },
+                { 
+                    id: 7, 
+                    number: 'CON007', 
+                    startTime: '2024-07-01', 
+                    endTime: '2024-09-30', 
+                    serviceType: 'maintenance', 
+                    isLicensee: false, 
+                    status: 'active' 
+                },
+                { 
+                    id: 8, 
+                    number: 'CON008', 
+                    startTime: '2024-08-01', 
+                    endTime: '2025-07-31', 
+                    serviceType: 'security', 
+                    isLicensee: true, 
+                    status: 'active' 
                 }
             ];
             localStorage.setItem('contracts', JSON.stringify(this.contracts));
@@ -113,8 +158,8 @@ class ContractsManagementPage {
         });
 
         // Close modal when clicking outside
-        $(document).on('click', (e) => {
-            if ($(e.target).closest('#contractModal').length === 0 && $('#contractModal').is(':visible')) {
+        $('#contractModal').on('click', (e) => {
+            if (e.target.id === 'contractModal') {
                 this.hideModal();
             }
         });
@@ -191,17 +236,20 @@ class ContractsManagementPage {
             $('.edit-contract, .delete-contract').hide();
         }
 
-        // Bind edit and delete events
-        if (true) {
-            $('.edit-contract').on('click', (e) => {
-                const id = parseInt($(e.target).closest('button').data('id'));
-                this.editContract(id);
-            });
-            $('.delete-contract').on('click', (e) => {
-                const id = parseInt($(e.target).closest('button').data('id'));
-                this.deleteContract(id);
-            });
-        }
+        // Use event delegation for dynamically generated buttons
+        $(document).off('click', '.edit-contract').on('click', '.edit-contract', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const id = parseInt($(e.target).closest('button').data('id'));
+            this.editContract(id);
+        });
+        
+        $(document).off('click', '.delete-contract').on('click', '.delete-contract', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const id = parseInt($(e.target).closest('button').data('id'));
+            this.deleteContract(id);
+        });
     }
 
     formatDate(dateString) {
@@ -211,15 +259,22 @@ class ContractsManagementPage {
     }
 
     showAddModal() {
+        console.log('showAddModal called');
         this.isEditing = false;
         this.editingId = null;
         $('#modalTitle').text('Add Contract');
         $('#contractForm')[0].reset();
         $('#contractId').val('');
+        
+        // For contracts added from portal, set licensee as checked and disabled
+        $('#contractLicensee').prop('checked', true).prop('disabled', true);
+        $('#licenseeNote').removeClass('hidden').text('(Automatically set for portal contracts)');
+        
         this.showModal();
     }
 
     editContract(id) {
+        console.log('editContract called with id:', id);
         const contract = this.contracts.find(c => c.id === id);
         if (!contract) return;
 
@@ -235,6 +290,13 @@ class ContractsManagementPage {
         $('#contractServiceType').val(contract.serviceType);
         $('#contractLicensee').prop('checked', contract.isLicensee);
         
+        // For editing, also disable the licensee checkbox (consistent with add form)
+        $('#contractLicensee').prop('disabled', true);
+        $('#licenseeNote').removeClass('hidden').text('(Cannot be modified in portal)');
+        
+        console.log('Edit form populated, licensee checkbox enabled:', !$('#contractLicensee').prop('disabled'));
+        console.log('Current licensee value:', contract.isLicensee);
+        
         this.showModal();
     }
 
@@ -247,6 +309,12 @@ class ContractsManagementPage {
     }
 
     submitContract() {
+        // Force the checkbox to be enabled during submit to ensure value is captured
+        const isDisabled = $('#contractLicensee').prop('disabled');
+        if (isDisabled) {
+            $('#contractLicensee').prop('disabled', false);
+        }
+        
         const formData = {
             number: $('#contractNumber').val().trim(),
             startTime: $('#contractStart').val(),
@@ -255,6 +323,13 @@ class ContractsManagementPage {
             isLicensee: $('#contractLicensee').is(':checked'),
             status: 'active'
         };
+        
+        // Restore disabled state if it was disabled
+        if (isDisabled) {
+            $('#contractLicensee').prop('disabled', true);
+        }
+        
+        console.log('Submitting contract with isLicensee:', formData.isLicensee);
 
         // Validation
         if (!formData.number || !formData.startTime || !formData.endTime) {
@@ -296,11 +371,19 @@ class ContractsManagementPage {
     }
 
     showModal() {
-        $('#contractModal').removeClass('hidden').show();
+        console.log('showModal called');
+        const modal = $('#contractModal');
+        console.log('Modal element found:', modal.length);
+        modal.removeClass('hidden').css('display', 'block');
+        console.log('Modal should be visible now');
     }
 
     hideModal() {
-        $('#contractModal').addClass('hidden').hide();
+        $('#contractModal').addClass('hidden').css('display', 'none');
+        // Reset form and states
+        $('#contractForm')[0].reset();
+        $('#contractLicensee').prop('disabled', false);
+        $('#licenseeNote').addClass('hidden');
         this.isEditing = false;
         this.editingId = null;
     }

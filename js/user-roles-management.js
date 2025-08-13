@@ -38,9 +38,9 @@ class UserRolesManagementPage {
         // Add sample data if empty
         if (this.roles.length === 0) {
             this.roles = [
-                { id: 1, name: 'System Admin', jobNature: 'system_admin', status: 'active', createdDate: '2024-01-01' },
-                { id: 2, name: 'Manager', jobNature: 'manager', status: 'active', createdDate: '2024-01-01' },
-                { id: 3, name: 'Frontline', jobNature: 'frontline', status: 'active', createdDate: '2024-01-01' }
+                { id: 1, name: 'System Admin', jobNature: 'system_admin', portal: true, status: 'active', createdDate: '2024-01-01' },
+                { id: 2, name: 'Manager', jobNature: 'manager', portal: true, status: 'active', createdDate: '2024-01-01' },
+                { id: 3, name: 'Frontline', jobNature: 'frontline', portal: true, status: 'active', createdDate: '2024-01-01' }
             ];
             localStorage.setItem('userRoles', JSON.stringify(this.roles));
         }
@@ -107,6 +107,9 @@ class UserRolesManagementPage {
                         }">
                             ${this.formatAccessLevel(role.jobNature)}
                         </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${role.portal === false ? '<span class="text-xs text-red-600">No</span>' : '<span class="text-xs text-green-700">Yes</span>'}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -177,6 +180,7 @@ class UserRolesManagementPage {
         $('#roleId').val(role.id);
         $('#roleName').val(role.name);
         $('#jobNature').val(role.jobNature);
+        $('#rolePortalAccess').prop('checked', role.portal !== false);
         $('#roleStatus').val(role.status);
         
         this.showModal();
@@ -194,6 +198,7 @@ class UserRolesManagementPage {
         const formData = {
             name: $('#roleName').val().trim(),
             jobNature: $('#jobNature').val(),
+            portal: $('#rolePortalAccess').is(':checked'),
             status: $('#roleStatus').val(),
             createdDate: this.isEditing ? this.roles.find(r => r.id === this.editingId)?.createdDate : new Date().toISOString().split('T')[0]
         };

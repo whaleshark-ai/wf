@@ -10,6 +10,7 @@ class TaskPage {
         this.documents = [];
         this.filteredTasks = [];
         this.pagination = { page: 1, pageSize: 12, totalPages: 1 };
+        this.editingTaskId = null;
         this.init();
     }
 
@@ -112,7 +113,7 @@ class TaskPage {
         $('#clearFiltersBtn').on('click', () => this.clearFilters());
         
         // Toggle events
-        $('#hideCompletedTasks, #hideCancelledTasks, #hideSuspendedTasks').on('change', () => this.applyFilters());
+        $('#hideCompletedTasks, #hideCancelledTasks, #hideRejectedTasks').on('change', () => this.applyFilters());
 
         // Close modal when clicking the overlay background only
         $('#addTaskModal').on('click', (e) => {
@@ -157,11 +158,12 @@ class TaskPage {
         const sectionsHtml = dates.map(dateKey => {
             const display = new Date(dateKey).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
             const cards = byDate[dateKey].map(task => `
-                <div class="task-card bg-white border rounded-lg p-4 shadow-sm" 
+                <div class="task-card bg-white border rounded-lg p-4 shadow-sm cursor-pointer hover:shadow" 
                     data-status="${task.status}" 
                     data-type="${task.category.toLowerCase()}" 
                     data-staff="${task.assignedStaff.join(',')}" 
-                    data-location="${task.location.toLowerCase()}">
+                     data-location="${task.location.toLowerCase()}" 
+                     data-id="${task.id}">
                     <div class="flex justify-between items-start mb-2">
                         <h4 class="font-semibold text-gray-800">${task.name}</h4>
                         <span class="px-2 py-1 text-xs rounded-full ${this.getStatusColor(task.status)}">${task.status}</span>
@@ -184,6 +186,61 @@ class TaskPage {
                 </div>`;
         }).join('');
         $('#taskCollection').html(sectionsHtml || '<div class="text-gray-500">No tasks.</div>');
+        // Click to open prefilled modal
+        $(document).off('click', '.task-card').on('click', '.task-card', (e) => {
+            const id = parseInt($(e.currentTarget).data('id'), 10);
+            const t = this.tasks.find(x => x.id === id);
+            if (!t) return;
+            this.openTaskForEdit(t);
+        });
+    }
+
+    openTaskForEdit(task) {
+        // Store the task ID being edited
+        this.editingTaskId = task.id;
+        
+        // Show modal as Edit
+        $('#taskModalTitle').text('View / Edit Task');
+        this.populateTaskFormForEdit(); // Use edit-specific population
+        
+        // Hide recurrence fields for editing
+        this.hideRecurrenceFields();
+        
+        // Fill fields
+        const cat = this.taskCategories.find(c => c.name === task.category);
+        if (cat) $('#taskCategory').val(cat.id).trigger('change');
+        // small delay to allow subcategory render
+        setTimeout(() => {
+            const sub = this.taskSubcategories.find(s => s.name === (task.subcategory||''));
+            if (sub) $('#taskSubcategory').val(sub.id).trigger('change');
+        }, 0);
+        $('#taskName').val(task.name);
+        $('#startTime').val(task.startTime?.slice(0,16));
+        $('#duration').val(task.duration || '');
+        $('#endTime').val(task.endTime?.slice(0,16));
+        // Features (if present)
+        if (task.features) {
+            $('#featurePhotoEvidence').prop('checked', !!task.features.photoEvidence);
+            $('#featureEarlyComplete').prop('checked', !!task.features.earlyComplete);
+        }
+        // Location: try to match POI first
+        const poi = this.locations.find(l => (l.name||'').toLowerCase() === (task.location||'').toLowerCase());
+        if (poi) {
+            $('.location-tab-btn[data-tab="poi"]').trigger('click');
+            const opt = $('#location option').filter(function(){ return $(this).text() === poi.name; }).val();
+            if (opt) $('#location').val(opt);
+        }
+        
+        // For edit mode, show radio buttons and select current assignee
+        const currentStaffId = task.assignedStaff && task.assignedStaff.length > 0 ? task.assignedStaff[0] : null;
+        if (currentStaffId) {
+            $(`#staffList input[value="${currentStaffId}"]`).prop('checked', true);
+        } else {
+            // Select "No Assignee" if no staff assigned
+            $('#staffList input[value=""]').prop('checked', true);
+        }
+        
+        $('#addTaskModal').removeClass('hidden').css('display', 'block');
     }
 
     getStatusColor(status) {
@@ -202,6 +259,8 @@ class TaskPage {
 
     showAddTaskModal() {
         this.populateTaskForm();
+        // Show recurrence fields for new tasks
+        this.showRecurrenceFields();
         $('#addTaskModal').removeClass('hidden').css('display', 'block');
     }
 
@@ -231,7 +290,13 @@ class TaskPage {
         $('#checkpointSelect').html('<option value="">Select checkpoint...</option>' + cpOptions);
         this.currentCheckpoints = checkpoints;
 
-        // Populate staff list
+        // Populate location zones (sample)
+        const zones = this.getSampleZones();
+        const zoneOpts = zones.map(z => `<option value="${z.id}">${z.name}</option>`).join('');
+        $('#zoneSelect').html('<option value="">Select location zone...</option>' + zoneOpts);
+        this.currentZones = zones;
+
+        // Populate staff list with checkboxes for new tasks
         const staffOptions = this.staff.map(s => `
             <div class="flex items-center">
                 <input type="checkbox" id="staff_${s.id}" value="${s.id}" class="mr-2">
@@ -239,6 +304,53 @@ class TaskPage {
             </div>
         `).join('');
         $('#staffList').html(staffOptions);
+
+        // Populate documents dropdown
+        this.renderDocumentOptions();
+    }
+
+    populateTaskFormForEdit() {
+        // Populate task categories
+        const categoryOptions = this.taskCategories.map(cat => 
+            `<option value="${cat.id}">${cat.name}</option>`
+        ).join('');
+        $('#taskCategory').html('<option value="">Select category...</option>' + categoryOptions);
+
+        // Populate locations
+        const locationOptions = this.locations.map(loc => 
+            `<option value="${loc.id}">${loc.name}</option>`
+        ).join('');
+        $('#location').html('<option value="">Select location...</option>' + locationOptions);
+
+        // Populate checkpoints
+        const checkpoints = this.getSampleCheckpoints();
+        const cpOptions = checkpoints.map(cp => 
+            `<option value="${cp.id}">${cp.name}</option>`
+        ).join('');
+        $('#checkpointSelect').html('<option value="">Select checkpoint...</option>' + cpOptions);
+        this.currentCheckpoints = checkpoints;
+
+        // Populate location zones (sample)
+        const zones = this.getSampleZones();
+        const zoneOpts = zones.map(z => `<option value="${z.id}">${z.name}</option>`).join('');
+        $('#zoneSelect').html('<option value="">Select location zone...</option>' + zoneOpts);
+        this.currentZones = zones;
+
+        // Populate staff list with radio buttons for edit mode (single selection)
+        const staffOptions = this.staff.map(s => `
+            <div class="flex items-center">
+                <input type="radio" name="editStaff" id="staff_${s.id}" value="${s.id}" class="mr-2">
+                <label for="staff_${s.id}" class="text-sm">${s.name}</label>
+            </div>
+        `).join('');
+        // Add "No Assignee" option for edit mode
+        const noAssigneeOption = `
+            <div class="flex items-center">
+                <input type="radio" name="editStaff" id="staff_none" value="" class="mr-2">
+                <label for="staff_none" class="text-sm text-gray-500">No Assignee</label>
+            </div>
+        `;
+        $('#staffList').html(noAssigneeOption + staffOptions);
 
         // Populate documents dropdown
         this.renderDocumentOptions();
@@ -255,6 +367,22 @@ class TaskPage {
 
     // removed filterDocumentOptions; simple dropdown retained
 
+    getSampleZones() {
+        return [
+            { id: 1, name: 'Zone 1' },
+            { id: 2, name: 'Zone 2' },
+            { id: 3, name: 'Zone 3' }
+        ];
+    }
+
+    showRecurrenceFields() {
+        $('#recurrenceType, #recurrenceInterval, #recurrenceEnd').closest('.grid').show();
+    }
+
+    hideRecurrenceFields() {
+        $('#recurrenceType, #recurrenceInterval, #recurrenceEnd').closest('.grid').hide();
+    }
+
     // Sample checkpoints with locations references
     getSampleCheckpoints() {
         return [
@@ -265,13 +393,18 @@ class TaskPage {
 
     resetTaskForm() {
         $('#taskCategory, #taskSubcategory, #taskName, #startTime, #duration, #endTime, #location, #checkpointSelect').val('');
+        $('#recurrenceType, #recurrenceInterval, #recurrenceEnd').val('');
         $('#checkpointLocationsList').empty();
         // reset location mode to POI
         $('.location-tab-btn').removeClass('bg-blue-600 text-white').addClass('bg-gray-200 text-gray-700');
         $('.location-tab-btn[data-tab="poi"]').addClass('bg-blue-600 text-white').removeClass('bg-gray-200 text-gray-700');
         $('#poiLocationSection').removeClass('hidden');
         $('#checkpointSection').addClass('hidden');
-        $('#staffList input[type="checkbox"]').prop('checked', false);
+        $('#zoneSection').addClass('hidden');
+        $('#staffList input[type="checkbox"], #staffList input[type="radio"]').prop('checked', false);
+        // Reset modal title and editing state
+        $('#taskModalTitle').text('Add New Task');
+        this.editingTaskId = null;
     }
 
     onTaskCategoryChange() {
@@ -302,9 +435,17 @@ class TaskPage {
         if (tab === 'poi') {
             $('#poiLocationSection').removeClass('hidden');
             $('#checkpointSection').addClass('hidden');
+            $('#zoneSection').addClass('hidden');
         } else {
-            $('#poiLocationSection').addClass('hidden');
-            $('#checkpointSection').removeClass('hidden');
+            if (tab === 'checkpoint') {
+                $('#poiLocationSection').addClass('hidden');
+                $('#checkpointSection').removeClass('hidden');
+                $('#zoneSection').addClass('hidden');
+            } else if (tab === 'zone') {
+                $('#poiLocationSection').addClass('hidden');
+                $('#checkpointSection').addClass('hidden');
+                $('#zoneSection').removeClass('hidden');
+            }
         }
     }
 
@@ -359,6 +500,23 @@ class TaskPage {
     }
 
     submitTask() {
+        // Determine if this is an edit (radio buttons) or new task (checkboxes)
+        const isEdit = $('#taskModalTitle').text().includes('Edit');
+        
+        let assignedStaff = [];
+        if (isEdit) {
+            // For edit mode, get selected radio button value
+            const selectedRadio = $('#staffList input[name="editStaff"]:checked').val();
+            if (selectedRadio) {
+                assignedStaff = [selectedRadio];
+            }
+        } else {
+            // For new tasks, get all checked checkboxes
+            assignedStaff = $('#staffList input:checked').map(function() {
+                return $(this).val();
+            }).get();
+        }
+
         const taskData = {
             id: Date.now(),
             name: $('#taskName').val(),
@@ -372,10 +530,8 @@ class TaskPage {
                 earlyComplete: $('#featureEarlyComplete').is(':checked')
             },
             location: this.getSelectedLocationForSubmit(true),
-            status: 'pending',
-            assignedStaff: $('#staffList input:checked').map(function() {
-                return $(this).val();
-            }).get(),
+            status: 'open-queued',
+            assignedStaff: assignedStaff,
             createdAt: new Date().toISOString()
         };
 
@@ -393,7 +549,128 @@ class TaskPage {
             return;
         }
 
-        this.tasks.push(taskData);
+        // Determine status by assignee presence
+        taskData.status = (taskData.assignedStaff && taskData.assignedStaff.length > 0) ? 'assigned' : 'open-queued';
+
+        if (isEdit) {
+            // For edit mode, update the existing task
+            // Find the task being edited from the clicked card
+            const taskCards = $('.task-card');
+            let editingTaskId = null;
+            
+            // Store the editing task ID when opening edit modal
+            if (this.editingTaskId) {
+                editingTaskId = this.editingTaskId;
+            }
+            
+            if (editingTaskId) {
+                const taskIndex = this.tasks.findIndex(t => t.id === editingTaskId);
+                if (taskIndex !== -1) {
+                    const originalTask = this.tasks[taskIndex];
+                    
+                    // Check if task is in-progress and assignee is changing
+                    const isInProgress = originalTask.status === 'in-progress';
+                    const originalAssignee = originalTask.assignedStaff && originalTask.assignedStaff.length > 0 ? originalTask.assignedStaff[0] : null;
+                    const newAssignee = taskData.assignedStaff && taskData.assignedStaff.length > 0 ? taskData.assignedStaff[0] : null;
+                    const assigneeChanged = originalAssignee !== newAssignee;
+                    
+                    let updatedTaskData = { ...taskData };
+                    
+                    // If task is in-progress and assignee changed, update start time to now
+                    if (isInProgress && assigneeChanged) {
+                        const now = new Date();
+                        updatedTaskData.startTime = now.toISOString();
+                        
+                        // Recalculate end time based on duration
+                        if (taskData.duration) {
+                            const endTime = new Date(now.getTime() + parseInt(taskData.duration) * 60000);
+                            updatedTaskData.endTime = endTime.toISOString();
+                        }
+                        
+                        console.log('Task reassigned while in-progress. Start time updated to:', updatedTaskData.startTime);
+                        
+                        // Show notification to user
+                        const newStaffName = this.getStaffNameById(newAssignee);
+                        const oldStaffName = this.getStaffNameById(originalAssignee);
+                        alert(`Task reassigned from ${oldStaffName || 'Unassigned'} to ${newStaffName || 'Unassigned'}. Start time has been updated to now due to in-progress status.`);
+                    }
+                    
+                    // Update existing task
+                    this.tasks[taskIndex] = {
+                        ...originalTask,
+                        ...updatedTaskData,
+                        id: editingTaskId, // Keep original ID
+                        createdAt: originalTask.createdAt // Keep original creation time
+                    };
+                }
+            }
+            
+            localStorage.setItem('tasks', JSON.stringify(this.tasks));
+            this.hideAddTaskModal();
+            this.loadTaskPage();
+            return;
+        }
+
+        // For new tasks: Create separate tasks for each assignee
+        const assignedStaffIds = taskData.assignedStaff;
+        const tasksToCreate = [];
+        
+        if (assignedStaffIds && assignedStaffIds.length > 0) {
+            // Create one task for each assignee
+            assignedStaffIds.forEach(staffId => {
+                const individualTask = {
+                    ...taskData,
+                    id: Date.now() + Math.floor(Math.random() * 100000),
+                    assignedStaff: [staffId], // Single staff member per task
+                    status: 'assigned'
+                };
+                tasksToCreate.push(individualTask);
+            });
+        } else {
+            // No assignees - create single open-queued task
+            tasksToCreate.push(taskData);
+        }
+
+        // Handle recurrence generation for each task
+        const recType = $('#recurrenceType').val();
+        const recInterval = parseInt($('#recurrenceInterval').val(), 10) || 0;
+        const recEndStr = $('#recurrenceEnd').val();
+        
+        const finalTasksToAdd = [];
+        
+        tasksToCreate.forEach(baseTask => {
+            const baseStart = new Date(baseTask.startTime);
+            const baseEnd = new Date(baseTask.endTime);
+            const tasksFromRecurrence = [baseTask];
+            
+            if (recType && recInterval > 0 && recEndStr) {
+                let nextStart = new Date(baseStart);
+                let nextEnd = new Date(baseEnd);
+                const endBound = new Date(recEndStr);
+                
+                while (true) {
+                    if (recType === 'hourly') {
+                        nextStart = new Date(nextStart.getTime() + recInterval * 60 * 60 * 1000);
+                        nextEnd = new Date(nextEnd.getTime() + recInterval * 60 * 60 * 1000);
+                    } else if (recType === 'daily') {
+                        nextStart = new Date(nextStart.getTime() + recInterval * 24 * 60 * 60 * 1000);
+                        nextEnd = new Date(nextEnd.getTime() + recInterval * 24 * 60 * 60 * 1000);
+                    }
+                    if (nextStart > endBound) break;
+                    
+                    tasksFromRecurrence.push({
+                        ...baseTask,
+                        id: Date.now() + Math.floor(Math.random() * 100000),
+                        startTime: nextStart.toISOString(),
+                        endTime: nextEnd.toISOString()
+                    });
+                }
+            }
+            
+            finalTasksToAdd.push(...tasksFromRecurrence);
+        });
+
+        this.tasks = this.tasks.concat(finalTasksToAdd);
         localStorage.setItem('tasks', JSON.stringify(this.tasks));
         this.hideAddTaskModal();
         this.loadTaskPage();
@@ -476,14 +753,24 @@ class TaskPage {
             if (returnLabel) return $('#location option:selected').text();
             return val;
         }
-        // Else use checkpoint selection: return a label that includes checkpoint and its locations
-        const cpId = parseInt($('#checkpointSelect').val(), 10);
-        const cp = this.currentCheckpoints?.find(c => c.id === cpId);
-        if (!cp) return returnLabel ? '' : '';
-        const cpName = $('#checkpointSelect option:selected').text();
-        const locNames = cp.locations.map(id => this.locations.find(l => l.id === id)?.name).filter(Boolean);
-        const label = `${cpName}: ${locNames.join(', ')}`;
-        return label;
+        // Else checkpoint
+        const checkpointActive = $('.location-tab-btn[data-tab="checkpoint"]').hasClass('bg-blue-600');
+        if (checkpointActive) {
+            const cpId = parseInt($('#checkpointSelect').val(), 10);
+            const cp = this.currentCheckpoints?.find(c => c.id === cpId);
+            if (!cp) return returnLabel ? '' : '';
+            const cpName = $('#checkpointSelect option:selected').text();
+            const locNames = cp.locations.map(id => this.locations.find(l => l.id === id)?.name).filter(Boolean);
+            const label = `${cpName}: ${locNames.join(', ')}`;
+            return label;
+        }
+        // Else zone
+        const zoneActive = $('.location-tab-btn[data-tab="zone"]').hasClass('bg-blue-600');
+        if (zoneActive) {
+            if (returnLabel) return $('#zoneSelect option:selected').text();
+            return $('#zoneSelect').val();
+        }
+        return '';
     }
 
     formatTime(dateString) {
@@ -497,6 +784,12 @@ class TaskPage {
         }).join(', ');
     }
 
+    getStaffNameById(staffId) {
+        if (!staffId) return null;
+        const staff = this.staff.find(s => s.id == staffId);
+        return staff ? staff.name : 'Unknown';
+    }
+
     applyFilters() {
         const statusFilter = $('#statusFilter').val();
         const typeFilter = $('#typeFilter').val();
@@ -506,7 +799,7 @@ class TaskPage {
         // Get toggle states
         const hideCompleted = $('#hideCompletedTasks').is(':checked');
         const hideCancelled = $('#hideCancelledTasks').is(':checked');
-        const hideSuspended = $('#hideSuspendedTasks').is(':checked');
+        const hideRejected = $('#hideRejectedTasks').is(':checked');
 
         let filteredTasks = this.tasks;
 
@@ -517,8 +810,8 @@ class TaskPage {
         if (hideCancelled) {
             filteredTasks = filteredTasks.filter(task => task.status !== 'cancelled');
         }
-        if (hideSuspended) {
-            filteredTasks = filteredTasks.filter(task => task.status !== 'suspended');
+        if (hideRejected) {
+            filteredTasks = filteredTasks.filter(task => task.status !== 'rejected');
         }
 
         // Apply other filters
@@ -583,9 +876,9 @@ class TaskPage {
                 'open-queued': 1,
                 'assigned': 2,
                 'in-progress': 3,
-                'completed': 4,
-                'cancelled': 5,
-                'suspended': 6
+                'rejected': 4,
+                'completed': 5,
+                'cancelled': 6
             };
             
             const priorityA = statusPriority[a.status] || 999;
@@ -727,7 +1020,7 @@ class TaskPage {
                 duration: 60,
                 location: 'Building B - Floor 1',
                 status: 'open-queued',
-                assignedStaff: [2],
+                assignedStaff: [],
                 createdAt: '2025-08-09T12:00:00'
             },
             {
@@ -779,7 +1072,7 @@ class TaskPage {
                 duration: 60,
                 location: 'Building B - Floor 1',
                 status: 'open-queued',
-                assignedStaff: [3],
+                assignedStaff: [],
                 createdAt: '2025-08-09T21:30:00'
             },
             {
@@ -921,7 +1214,7 @@ class TaskPage {
                 duration: 60,
                 location: 'Building B - Floor 1',
                 status: 'open-queued',
-                assignedStaff: [2]
+                assignedStaff: []
             },
             {
                 id: 21,
@@ -969,7 +1262,7 @@ class TaskPage {
                 duration: 45,
                 location: 'Building A - Floor 1',
                 status: 'open-queued',
-                assignedStaff: [1]
+                assignedStaff: []
             },
             {
                 id: 25,
