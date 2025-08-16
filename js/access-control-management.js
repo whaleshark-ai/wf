@@ -41,7 +41,8 @@ class AccessControlManagementPage {
         this.roles = JSON.parse(localStorage.getItem('userRolesV2')) || [
             { id: 1, name: 'System Admin', accessLevel: 'system_admin', status: 'active' },
             { id: 2, name: 'Manager', accessLevel: 'manager', status: 'active' },
-            { id: 3, name: 'Frontline', accessLevel: 'frontline', status: 'active' }
+            { id: 3, name: 'AA', accessLevel: 'aa', status: 'active' },
+            { id: 4, name: 'Frontline', accessLevel: 'frontline', status: 'active' }
         ];
         localStorage.setItem('userRolesV2', JSON.stringify(this.roles));
 
@@ -66,7 +67,8 @@ class AccessControlManagementPage {
                     customPoi: r.accessLevel === 'frontline' ? 'view' : 'manage',
                     checkpoints: r.accessLevel === 'frontline' ? 'view' : 'manage',
                     zones: r.accessLevel === 'frontline' ? 'view' : 'manage',
-                    documents: r.accessLevel === 'frontline' ? 'view' : 'manage'
+                    documents: r.accessLevel === 'frontline' ? 'view' : 'manage',
+                    serviceType: r.accessLevel === 'frontline' ? 'view' : 'manage'
                 };
             });
             localStorage.setItem('accessTaskSettingsV2', JSON.stringify(this.taskSettings));
@@ -161,7 +163,8 @@ class AccessControlManagementPage {
             { key: 'customPoi', label: 'Custom POI' },
             { key: 'checkpoints', label: 'Checkpoints' },
             { key: 'zones', label: 'Location Zones' },
-            { key: 'documents', label: 'Documents' }
+            { key: 'documents', label: 'Documents' },
+            { key: 'serviceType', label: 'Service Type' }
         ];
         rows.forEach(rw => {
             const manageDisabled = rw.key === 'documents' && !(role.accessLevel === 'manager' || role.accessLevel === 'system_admin') ? 'disabled' : '';
@@ -219,14 +222,17 @@ class AccessControlManagementPage {
             customPoi: accessLevel === 'frontline' ? 'view' : 'manage',
             checkpoints: accessLevel === 'frontline' ? 'view' : 'manage',
             zones: accessLevel === 'frontline' ? 'view' : 'manage',
-            documents: accessLevel === 'frontline' ? 'view' : 'manage'
+            documents: accessLevel === 'frontline' ? 'view' : 'manage',
+            serviceType: accessLevel === 'frontline' ? 'view' : 'manage',
+            staff: accessLevel === 'frontline' ? 'view' : 'manage',
+            shiftSchedule: accessLevel === 'frontline' ? 'view' : 'manage'
         };
         this.hideAddRole();
         this.renderRolesList();
         this.selectRole(id);
     }
 
-    formatLevel(level) { return level === 'system_admin' ? 'System Admin' : level === 'manager' ? 'Manager' : 'Frontline'; }
+    formatLevel(level) { return level === 'system_admin' ? 'System Admin' : level === 'manager' ? 'Manager' : level === 'aa' ? 'AA' : 'Frontline'; }
 
     // Modal-based add/edit removed in favor of inline toggles
 
